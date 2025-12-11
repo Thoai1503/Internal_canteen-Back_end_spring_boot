@@ -25,6 +25,7 @@ import tinhvomon.com.models.OrderStatusHistory;
 import tinhvomon.com.models.VnPayPayload;
 import tinhvomon.com.repository.CartItemRepository;
 import tinhvomon.com.repository.CartRepository;
+import tinhvomon.com.repository.IngredientInventoryRepository;
 import tinhvomon.com.repository.OrderItemRepository;
 import tinhvomon.com.repository.OrderRepository;
 import tinhvomon.com.repository.OrderStatusHistoryRepository;
@@ -41,14 +42,16 @@ public class PaymentController {
 	private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final IngredientInventoryRepository ingredientInventoryRepository;
 	
 	@Autowired
-	public PaymentController(CartRepository cartRepository,CartItemRepository cartItemRepository,OrderRepository orderRepository,OrderItemRepository orderItemRepository ,OrderStatusHistoryRepository orderStatusHistoryRepository) {
+	public PaymentController(CartRepository cartRepository,CartItemRepository cartItemRepository,OrderRepository orderRepository,OrderItemRepository orderItemRepository ,OrderStatusHistoryRepository orderStatusHistoryRepository,IngredientInventoryRepository ingredientInventoryRepository) {
 		this.cartItemRepository =cartItemRepository;
 		this.cartRepository= cartRepository;
 		this.orderRepository = orderRepository;
 		this.orderItemRepository = orderItemRepository;
 		this.orderStatusHistoryRepository = orderStatusHistoryRepository;
+		this.ingredientInventoryRepository = ingredientInventoryRepository;
 	} 
 	@Autowired
 	private VNPay vnPay ;
@@ -59,10 +62,28 @@ public class PaymentController {
 		var user_id =Integer.valueOf( request.getParameter("orderInfo"));
 		o.setUser_id(user_id );
 		o.setTotal_amount(Double.valueOf(request.getParameter("amount")));
-		
 		o.setStatus(1);
 		HashSet<CartItem> list =  cartItemRepository.FindByUserId(user_id);
+		//check lượng tồn kho
+		if(// nếu mảng > 0 -> tồn tại sản phẩm hết hàng	
+			ingredientInventoryRepository.CheckingStock(list).size()>0
+		  ) {
+			return ResponseEntity.ok("Hết hàng");
+			}
+		
+		
+		
+		
+		//nếu tất cả đủ hàng thì tạo order
 		Order order = orderRepository.create(o);
+		
+		
+		
+		
+		
+		
+		
+		//tạo chi tiết đơn hàng
 		for(CartItem item:list) {
 			OrderItems i =new OrderItems();
 			i.setFood_id(item.getFood_id());
@@ -96,7 +117,7 @@ System.out.println("Request: "+ request.getRemoteAddr());
 //                         Map.Entry::getKey,
 //                         e -> String.join(",", e.getValue())  
 //                 ));
-//         
+         
            var user_id=  Integer.valueOf( fields.get("vnp_OrderInfo"));
            var responseCode = String.valueOf(fields.get("vnp_ResponseCode"));
            System.out.println( "Payment info: " + user_id);
@@ -124,7 +145,7 @@ System.out.println("Request: "+ request.getRemoteAddr());
         	   osh.setNote("Đơn hàng đã được thanh toán thành công");
         	   var re= orderStatusHistoryRepository.create(osh);
         	   
-        	   System.out.println( "OrderStatusHistory Re: " + re.getId());
+        	   System.out.println("OrderStatusHistory Re: " + re.getId());
         	   
         	     return new RedirectView("http://localhost:3000/success");
            }

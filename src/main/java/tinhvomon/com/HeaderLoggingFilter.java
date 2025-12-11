@@ -93,6 +93,10 @@ public class HeaderLoggingFilter extends OncePerRequestFilter {
            	  String token = authorization.substring(7);
            	  username = jwtSercurity.extractUsername(token);
                 
+           	  
+           	  if(username ==null) {
+                  ResponseEntity.status(401).body("Unauthorized user");
+           	  }
                  
 
                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -105,6 +109,9 @@ public class HeaderLoggingFilter extends OncePerRequestFilter {
                                userDetails.getAuthorities());
                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                   }
+                   else {
+                	   ResponseEntity.status(401).body("Token expire");
                    }
                
                }

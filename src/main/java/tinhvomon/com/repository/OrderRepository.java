@@ -135,8 +135,133 @@ public class OrderRepository implements IRepo<Order> {
 		}
 		return null;
 	}
+	
+	public List<Order> findAllList(
+		    LocalDateTime start_date,
+		    LocalDateTime end_date,
+		    Double min_amount,
+		    Double max_amount,
+		    String sort_by,
+		    String sort_order,
+		    String status
+		) {
+	  	System.out.println("Repository Method Called with Parameters:");
+	  	System.out.println("start_date: " + start_date);
+    	System.out.println("end_date: " + end_date);
+    	System.out.println("min_amount: " + min_amount);
+    	System.out.println("max_amount: " + max_amount);
+    	System.out.println("sort_by: " + sort_by);
+    	System.out.println("sort_order: " + sort_order);
+    	System.out.println("status: " + status);
+		    StringBuilder sql = new StringBuilder(
+		        "SELECT o.cancel_reason, o.id, o.total_amount, o.status, o.user_id, o.created_at, " +
+		        "o.cancellation_admin_note, o.cancellation_processed_by, o.cancellation_processed_date, " +
+		        "o.cancellation_request_date, o.cancellation_request_reason, o.cancellation_status, " +
+		        "us.email " +
+		        "FROM Orders o " +
+		        "INNER JOIN Users us ON o.user_id = us.id " +
+		        "WHERE 1=1 "
+		    );
+		    
+		    List<Object> params = new ArrayList<>();
+		    
+		    // Add filters
+		    if (start_date != null) {
+		        sql.append("AND o.created_at >= ? ");
+		        params.add(Timestamp.valueOf(start_date));
+		    }
+		    
+		    if (end_date != null) {
+		        sql.append("AND o.created_at <= ? ");
+		        params.add(Timestamp.valueOf(end_date));
+		    }
+		    
+		    if (min_amount != null) {
+		        sql.append("AND o.total_amount >= ? ");
+		        params.add(min_amount);
+		    }
+		    
+		    if (max_amount != null) {
+		        sql.append("AND o.total_amount <= ? ");
+		        params.add(max_amount);
+		    }
+		    
+		    if (status != null && !status.equals("all")) {
+		        sql.append("AND o.status = ? ");
+		        params.add(Integer.parseInt(status));
+		    }
+		    
+		    // Add sorting
+		    String sortColumn = sort_by.equals("amount") ? "o.total_amount" : "o.created_at";
+		    String sortDirection = sort_order.equalsIgnoreCase("desc") ? "DESC" : "ASC";
+		    sql.append("ORDER BY ").append(sortColumn).append(" ").append(sortDirection);
+		    
+		    List<Order> list = new ArrayList<>();
+		    
+		    try (Connection con = sqldts.getConnection();
+		         PreparedStatement ps = con.prepareStatement(sql.toString())) {
+		        
+		        // Set parameters
+		        for (int i = 0; i < params.size(); i++) {
+		            ps.setObject(i + 1, params.get(i));
+		        }
+		        
+		        ResultSet rs = ps.executeQuery();
+		        
+		        while (rs.next()) {
+		            Order ord = new Order();
+		            User user = new User();
+		            
+		            user.setEmail(rs.getString("email"));
+		            
+		            ord.setId(rs.getInt("id"));
+		            ord.setUser_id(rs.getInt("user_id"));
+		            ord.setTotal_amount(rs.getDouble("total_amount"));
+		            ord.setStatus(rs.getInt("status"));
+		            
+		            Timestamp createdAt = rs.getTimestamp("created_at");
+		            if (createdAt != null) {
+		                ord.setCreated_at(createdAt.toLocalDateTime());
+		            }
+		            
+		            ord.setUser(user);
+		            
+		            // Handle cancellation info
+		            int cancellationStatus = rs.getInt("cancellation_status");
+		            String cancellationReason = rs.getString("cancellation_request_reason");
+		            int processedBy = rs.getInt("cancellation_processed_by");
+		            String adminNote = rs.getString("cancellation_admin_note");
+		            
+		            ord.setCancellation_status(new CancellationRequest(
+		                cancellationStatus, 
+		                cancellationReason, 
+		                processedBy, 
+		                adminNote
+		            ));
+		            
+		            list.add(ord);
+		        }
+		        
+		        return list;
+		        
+		    } catch (Exception ex) {
+		        ex.printStackTrace();
+		    }
+		    
+		    return null;
+		}
+	
 	public List<Order> getAllList() {
 		String sql ="select o.cancel_reason,o.id,o.total_amount,o.status,o.user_id,o.created_at,o.cancellation_admin_note,o.cancellation_processed_by,o.cancellation_processed_date,o.cancellation_request_date,o.cancellation_request_reason,o.cancellation_status,us.email from Orders o inner join Users us on o.user_id = us.id order by o.created_at desc";
+		StringBuilder sql2 = new StringBuilder(
+		        "SELECT o.cancel_reason, o.id, o.total_amount, o.status, o.user_id, o.created_at, " +
+		        "o.cancellation_admin_note, o.cancellation_processed_by, o.cancellation_processed_date, " +
+		        "o.cancellation_request_date, o.cancellation_request_reason, o.cancellation_status, " +
+		        "us.email " +
+		        "FROM Orders o " +
+		        "INNER JOIN Users us ON o.user_id = us.id " +
+		        "WHERE 1=1 "
+		    );
    List<Order> list =new ArrayList<Order>();
 		try (Connection con = sqldts.getConnection();
 		          PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){

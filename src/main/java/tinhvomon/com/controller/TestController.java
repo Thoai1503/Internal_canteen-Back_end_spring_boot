@@ -11,9 +11,9 @@ import tinhvomon.com.service.TestSingleton;
 @RequestMapping("/test")
 public class TestController {
 
+@Autowired
   private final TestSingleton testSingleton;
  
-  @Autowired
  public TestController(TestSingleton testSingleton) {
 	 this.testSingleton = testSingleton;
 	 
