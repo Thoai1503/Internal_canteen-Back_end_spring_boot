@@ -73,7 +73,8 @@ public class SercurityConfig  {
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",
             "http://localhost:4200",
-            "http://localhost:8080"
+            "http://localhost:8080",
+            "http://103.90.225.130:3000"
         ));
         
         // Or allow all origins (not recommended for production)
