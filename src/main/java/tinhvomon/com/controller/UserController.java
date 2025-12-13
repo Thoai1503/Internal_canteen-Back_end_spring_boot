@@ -70,7 +70,7 @@ public class UserController {
 	    cookie.setHttpOnly(true); // không cho JS đọc (an toàn)
 	    cookie.setSecure(true);   // chỉ gửi qua HTTPS
 	    cookie.setPath("/");      // áp dụng cho toàn bộ app
-		  cookie.setDomain("103.90.225.130");
+	//	  cookie.setDomain("103.90.225.130");
 	    cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
 	    response.addCookie(cookie);
 	    
@@ -78,7 +78,7 @@ public class UserController {
 		  roleCookie.setHttpOnly(true); // không cho JS đọc (an toàn)
 		  roleCookie.setSecure(true);   // chỉ gửi qua HTTPS
 		  roleCookie.setPath("/");      // áp dụng cho toàn bộ app
-		  roleCookie.setDomain("103.90.225.130");
+	//	  roleCookie.setDomain("103.90.225.130");
 		  roleCookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
 		    response.addCookie(roleCookie);
 	
@@ -87,7 +87,7 @@ public class UserController {
 	    userCookie.setSecure(true);
 	    userCookie.setPath("/");
 	    userCookie.setMaxAge(7 * 24 * 60 * 60);
-	    userCookie.setDomain("103.90.225.130");
+	  //  userCookie.setDomain("103.90.225.130");
 	    response.addCookie(userCookie);
 	    
 	
